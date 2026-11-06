@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PerFresh</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+<style>
+:root{
+  --bg1:#07140f; --bg2:#0d2318; --bg3:#071711;
+  --ver1:#55e58c; --ver2:#2aa85c; --ver3:#12602f; --ver4:#073a1b;
+  --tx:#eafff1; --tx2:#8fb8a0; --bor:#05150d;
+  --mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+:root{ --am1:#ffd98a; --am2:#e8a21c; --am3:#8a5c04;
+       --ro1:#ff9e86; --ro2:#e8452c; --ro3:#7d1f10;
+       --az1:#9fd8ff; --az2:#2f8fd6; --az3:#0d4a74; }
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;color:var(--tx);
+  background:linear-gradient(175deg,var(--bg2) 0%,var(--bg1) 45%,var(--bg3) 100%);
+  background-attachment:fixed;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+  -webkit-font-smoothing:antialiased;-webkit-text-size-adjust:100%}
+.wrap{max-width:1180px;margin:0 auto;padding:0 12px 70px}
+
+/* ---------- la barra de arriba ---------- */
+.bar{position:sticky;top:0;z-index:30;
+  background:linear-gradient(178deg,#10301e 0%,#0a1f14 70%,#07160e 100%);
+  border-bottom:4px solid var(--bor);
+  box-shadow:inset 0 2px 0 rgba(255,255,255,.08), 0 8px 24px rgba(0,0,0,.6);
+  padding:10px 0 10px;margin-bottom:14px}
+.bar .in{max-width:1180px;margin:0 auto;padding:0 12px}
+.mrc{font-size:10px;font-weight:900;letter-spacing:.3em;text-transform:uppercase;
+  color:#7ff0a8;text-shadow:0 2px 0 rgba(0,0,0,.6)}
+h1{margin:2px 0 9px;font-size:27px;font-weight:900;letter-spacing:.04em;
+  color:#fff;line-height:1.05;
+  text-shadow:0 1px 0 #bff0c6,0 2px 0 #5fae68,0 3px 0 #2e6e36,
+    0 4px 0 #1d5023,0 6px 11px rgba(0,0,0,.65)}
+
+.tabs{display:flex;gap:7px;flex-wrap:nowrap;overflow-x:auto;
+  scrollbar-width:none;padding-bottom:2px}
+.tabs::-webkit-scrollbar{display:none}
+.tabs>*{flex:0 0 auto}
+
+/* ---------- botones en relieve ---------- */
+button{border-radius:999px;border:2.5px solid var(--bor);
+  background:linear-gradient(175deg,#28402f,#16281d);
+  color:var(--tx);font-size:13px;font-weight:900;letter-spacing:.03em;
+  font-family:inherit;padding:8px 16px;cursor:pointer;line-height:1;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.14), 0 3px 0 #04120a,
+    0 6px 11px rgba(0,0,0,.4);
+  transition:transform .05s}
+button:active{transform:translateY(2px);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.14), 0 1px 0 #04120a}
+button.on,button.pri{
+  background:linear-gradient(175deg,var(--ver1),var(--ver2) 55%,var(--ver3));
+  color:#04210e;border-color:var(--bor);
+  box-shadow:inset 0 1px 0 #d2ffe2, 0 3px 0 #04300f, 0 7px 14px rgba(0,0,0,.45)}
+button.sm{padding:5px 11px;font-size:11.5px;border-width:2px;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 2px 0 #04120a}
+button.gh{background:linear-gradient(175deg,#1b2d21,#0e1b14)}
+button:disabled{opacity:.45;box-shadow:none}
+
+input,select{background:#061009;border:2.5px solid var(--bor);border-radius:10px;
+  color:var(--tx);font-size:14px;padding:8px 10px;font-family:inherit;
+  box-shadow:inset 0 2px 5px rgba(0,0,0,.6)}
+input:focus,select:focus{outline:none;border-color:var(--ver2);
+  box-shadow:inset 0 2px 5px rgba(0,0,0,.6),0 0 0 3px rgba(42,168,92,.25)}
+input.n{width:74px;text-align:right;font-family:var(--mono);font-weight:800;
+  font-variant-numeric:tabular-nums}
+
+/* ---------- tarjetas levantadas ---------- */
+.card{border-radius:16px;border:4px solid var(--bor);
+  background:linear-gradient(175deg,#16301f 0%,#102418 60%,#0b1b11 100%);
+  padding:15px;margin-bottom:14px;
+  box-shadow:inset 0 2px 0 rgba(255,255,255,.08), 0 6px 0 #04120a,
+    0 12px 22px rgba(0,0,0,.45)}
+.lbl{font-size:10px;font-weight:900;letter-spacing:.22em;color:#7fc49a;
+  text-transform:uppercase;margin-bottom:10px;text-shadow:0 1px 0 rgba(0,0,0,.5)}
+.row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+
+/* ---------- tablas ---------- */
+.tbl{overflow-x:auto;border-radius:11px;border:3px solid var(--bor);
+  background:#0a1b12;box-shadow:inset 0 2px 7px rgba(0,0,0,.5)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:#8fd8ad;
+  text-align:left;padding:9px 8px;font-weight:900;
+  background:linear-gradient(178deg,#1d3a27,#122418);
+  border-bottom:3px solid var(--bor);white-space:nowrap}
+td{padding:7px 8px;border-bottom:1px solid #16291d}
+tbody tr:nth-child(even){background:rgba(255,255,255,.022)}
+td.n,th.n{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums}
+td b{font-weight:900}
+
+/* ---------- pastillas en relieve ---------- */
+.pill{display:inline-block;padding:3px 11px;border-radius:999px;font-size:11px;
+  font-weight:900;letter-spacing:.06em;border:2px solid var(--bor);
+  text-shadow:0 1px 0 rgba(0,0,0,.25)}
+.ok{background:linear-gradient(175deg,var(--ver1),var(--ver2));color:#04210e;
+  box-shadow:inset 0 1px 0 #d8ffe7,0 2px 0 #04300f}
+.sob{background:linear-gradient(175deg,var(--am1),var(--am2));color:#3a2602;
+  box-shadow:inset 0 1px 0 #fff0cd,0 2px 0 var(--am3)}
+.falta{background:linear-gradient(175deg,var(--ro1),var(--ro2));color:#fff;
+  box-shadow:inset 0 1px 0 #ffd3c8,0 2px 0 var(--ro3)}
+.org{background:linear-gradient(175deg,#9ff7c0,#3cbf6f);color:#04210e;
+  box-shadow:inset 0 1px 0 #e4fff0,0 2px 0 #0a4a22}
+.cv{background:linear-gradient(175deg,#ffe3a6,#dba12a);color:#3a2602;
+  box-shadow:inset 0 1px 0 #fff6e0,0 2px 0 #7a5406}
+.mut{color:var(--tx2)}
+
+/* ---------- numerotes ---------- */
+.big{font-size:34px;font-weight:900;font-family:var(--mono);line-height:1;
+  color:#fff;text-shadow:0 2px 0 #1d5023,0 4px 10px rgba(0,0,0,.6)}
+.gd{display:grid;grid-template-columns:repeat(auto-fit,minmax(142px,1fr));gap:10px}
+.kv{border-radius:13px;border:3px solid var(--bor);padding:11px 12px;
+  background:linear-gradient(175deg,#1b3625,#0e1f15);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.09),0 4px 0 #04120a}
+.kv b{display:block;font-size:25px;font-weight:900;font-family:var(--mono);
+  line-height:1.05;text-shadow:0 2px 0 rgba(0,0,0,.5)}
+.kv small{font-size:9.5px;letter-spacing:.17em;color:#7fc49a;font-weight:900}
+.kv.sb b{color:var(--am1)} .kv.fl b{color:var(--ro1)} .kv.vd b{color:var(--ver1)}
+
+/* ---------- avisos ---------- */
+.aviso{border-radius:13px;padding:12px 14px;font-size:13.5px;line-height:1.5;
+  margin-top:11px;border:3px solid var(--bor);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.1),0 4px 0 #04120a}
+.aviso.r{background:linear-gradient(175deg,#6b1a0e,#3d0d06);color:#ffd8cf}
+.aviso.a{background:linear-gradient(175deg,#6b5008,#3d2c04);color:#ffeec4}
+.aviso.v{background:linear-gradient(175deg,#12512b,#083118);color:#d6ffe4}
+.aviso b{color:#fff}
+
+/* ---------- la rejilla de la semana ---------- */
+.sem td.c{text-align:center;font-family:var(--mono);font-weight:900;
+  font-variant-numeric:tabular-nums;font-size:13px;padding:5px 3px}
+.sem td.c span{display:inline-block;min-width:46px;padding:4px 5px;
+  border-radius:8px;border:2px solid var(--bor)}
+.sem .s{background:linear-gradient(175deg,var(--am1),var(--am2));color:#3a2602;
+  box-shadow:inset 0 1px 0 #fff0cd}
+.sem .f{background:linear-gradient(175deg,var(--ro1),var(--ro2));color:#fff;
+  box-shadow:inset 0 1px 0 #ffd3c8}
+.sem .c0{background:linear-gradient(175deg,#2c4a36,#1a2e22);color:#8fd8ad}
+.sem .vacio{color:#2f4c3a}
+
+/* ---------- entrar ---------- */
+.ent{max-width:390px;margin:8vh auto;padding:0 14px}
+.ent .card{padding:22px}
+.ent input{width:100%;margin-bottom:11px;font-size:19px;padding:13px;
+  text-align:center;letter-spacing:.3em;font-family:var(--mono)}
+.ent h1{font-size:30px}
+.err{color:var(--ro1);font-size:13px;font-weight:900;margin-top:9px}
+.hint{font-size:11.5px;color:var(--tx2);line-height:1.5;margin-top:8px}
+
+@media(max-width:700px){
+  h1{font-size:21px}
+  .card{padding:11px;border-width:3px;border-radius:13px}
+  .lbl{letter-spacing:.16em}
+  input.n{width:54px;padding:6px 5px;font-size:13px}
+  .big{font-size:28px}
+  .kv b{font-size:21px}
+  th{font-size:9px;padding:7px 5px}
+  td{padding:6px 5px}
+  .sem td.c span{min-width:38px;font-size:11.5px;padding:3px 2px}
+  .ent{margin:5vh auto}
+  /* los dias en un solo renglon que se desliza, como las pestanas */
+  .dsel{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+  .dsel::-webkit-scrollbar{display:none}
+  .dsel>*{flex:0 0 auto}
+  .gd{grid-template-columns:1fr 1fr}
+}
+</style>
+</head><body><div id="root"></div>
+<script>
+var BUILD="v2026-11-06-PF1";
+/* ====== PEGA AQUI LA LLAVE WEB DE TU FIREBASE ======
+   Firebase > Configuracion del proyecto > Tus apps > Configuracion del SDK > apiKey
+   Esta llave es publica a proposito: no abre nada por si sola, lo que manda son
+   las reglas y la cuenta con la que cada quien entra.                        */
+var API_KEY="PEGA_AQUI_TU_API_KEY";
+
+/* ===== COMO SE ENTRA =====
+   "pin"   -> solo un numero. Arranca ya, sin configurar nada. La separacion
+              entre agricolas es SOLO DE PANTALLA: quien abra el codigo ve los
+              cuatro PIN. Sirve para probar.
+   "real"  -> correo y contrasena de verdad, con las reglas de Firebase. Ahi si
+              un productor no alcanza lo de otro aunque quiera.
+   Para pasar a real: cambia esta linea a "real", pega la API_KEY de arriba,
+   cambia FB al proyecto nuevo, y sigue PASOS.md.                          */
+var MODO=window.__MODO||"pin";
+
+/* En modo pin va sobre la base que ya tienes. En modo real tiene que ser un
+   proyecto de Firebase APARTE: en Firebase el permiso de arriba manda, y como
+   la base de Parras Valley esta abierta para que jalen las demas apps, nada de
+   lo que se meta ahi dentro se puede cerrar.                              */
+var FB=window.__FB||"https://parrasvalley-default-rtdb.firebaseio.com";
+</script>
+<script type="text/babel">
+var uS=React.useState,uE=React.useEffect,uM=React.useMemo,uR=React.useRef;
+
+/* ================= utilidades ================= */
+var DIAS=["vie","sab","dom","lun","mar","mie","jue"];
+function p2(n){return (n<10?"0":"")+n}
+function iso(d){return d.getFullYear()+"-"+p2(d.getMonth()+1)+"-"+p2(d.getDate())}
+/* la semana va de VIERNES a JUEVES, igual que en las demas apps */
+function viernes(f){
+  var d=new Date((f||iso(new Date()))+"T12:00:00");
+  var x=(d.getDay()-5+7)%7;            /* 5 = viernes */
+  d.setDate(d.getDate()-x); return iso(d)}
+function masDias(f,n){var d=new Date(f+"T12:00:00");d.setDate(d.getDate()+n);return iso(d)}
+function diaDe(sem,i){return masDias(sem,i)}
+function lindo(f){var d=new Date(f+"T12:00:00");
+  return p2(d.getDate())+"/"+p2(d.getMonth()+1)}
+function nf(v){var n=parseFloat(String(v==null?"":v).replace(/[^0-9.\-]/g,""));
+  return isFinite(n)?n:0}
+function miles(n){n=Math.round(n||0);
+  return String(n).replace(/\B(?=(\d{3})+(?!\d))/g,",")}
+/* Firebase no admite . # $ [ ] / en el nombre de una llave */
+function esc(s){return String(s==null?"":s)
+  .replace(/~/g,"~t").replace(/\//g,"~s").replace(/\./g,"~p")
+  .replace(/#/g,"~n").replace(/\$/g,"~d").replace(/\[/g,"~a").replace(/\]/g,"~b")}
+function des(s){return String(s==null?"":s)
+  .replace(/~a/g,"[").replace(/~b/g,"]").replace(/~d/g,"$").replace(/~n/g,"#")
+  .replace(/~p/g,".").replace(/~s/g,"/").replace(/~t/g,"~")}
+function pk(p){return esc(p.c)+"|"+esc(p.p)+"|"+(p.t||"org")}
+function dePk(k){var a=String(k).split("|");
+  return {c:des(a[0]||""),p:des(a[1]||""),t:a[2]||"org"}}
+function nomPr(p){return p.c+" "+p.p+" "+(p.t==="cv"?"CV":"ORG")}
+function sinAc(s){return String(s||"").normalize("NFD").replace(/[̀-ͯ]/g,"")
+  .toLowerCase().trim()}
+
+/* ================= sesion ================= */
+/* Entrar de verdad: la cuenta la valida Google y devuelve un pase (idToken) que
+   viaja en CADA lectura y escritura. Las reglas de Firebase son las que deciden
+   que puede ver cada quien; la pantalla solo acompana. */
+var SES={tok:null,ref:null,uid:null,mail:null,vence:0};
+function post(url,cuerpo){
+  return fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify(cuerpo)}).then(function(r){
+      return r.json().then(function(j){
+        if(!r.ok)throw new Error((j&&j.error&&j.error.message)||("HTTP "+r.status));
+        return j})})}
+function entra(mail,pass){
+  return post("https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key="+API_KEY,
+    {email:mail,password:pass,returnSecureToken:true})
+  .then(function(j){
+    SES.tok=j.idToken; SES.ref=j.refreshToken; SES.uid=j.localId; SES.mail=j.email;
+    SES.vence=Date.now()+(nf(j.expiresIn)||3600)*1000-60000;
+    try{localStorage.setItem("pf-ref",j.refreshToken)}catch(e){}
+    return SES})}
+function refresca(rt){
+  return post("https://securetoken.googleapis.com/v1/token?key="+API_KEY,
+    {grant_type:"refresh_token",refresh_token:rt})
+  .then(function(j){
+    SES.tok=j.id_token||j.access_token; SES.ref=j.refresh_token; SES.uid=j.user_id;
+    SES.vence=Date.now()+(nf(j.expires_in)||3600)*1000-60000;
+    try{localStorage.setItem("pf-ref",SES.ref)}catch(e){}
+    return SES})}
+function pase(){
+  if(SES.tok&&Date.now()<SES.vence)return Promise.resolve(SES.tok);
+  if(SES.ref)return refresca(SES.ref).then(function(){return SES.tok});
+  return Promise.resolve(null)}
+function sale(){SES.tok=SES.ref=SES.uid=SES.mail=null;
+  try{localStorage.removeItem("pf-ref")}catch(e){}}
+
+/* ================= Firebase con pase ================= */
+function fget(ruta){
+  return pase().then(function(t){
+    return fetch(FB+"/"+ruta+".json"+(t?"?auth="+t:""))
+      .then(function(r){ if(r.status===401||r.status===403)throw new Error("sin permiso");
+        return r.json()})})}
+function fput(ruta,val){
+  return pase().then(function(t){
+    return fetch(FB+"/"+ruta+".json"+(t?"?auth="+t:""),
+      {method:"PUT",body:JSON.stringify(val)})
+      .then(function(r){ if(!r.ok)throw new Error(r.status===401||r.status===403
+        ? "sin permiso para guardar" : ("no se guardo: "+r.status)); return true})})}
+
+/* ================= configuracion de arranque ================= */
+/* Solo los tres nombres que Miguel ya dio. Lo demas lo captura el en CATALOGO:
+   la cuarta agricola, los clientes, los productos y quien le surte a quien. */
+function cfgVacia(){return {
+  ag:{omcor:{n:"Omen y Cornejo",pin:"1"},
+      biotech:{n:"Biotech",pin:"2"},
+      agricharcos:{n:"Agricharcos",pin:"3"},
+      rodelli:{n:"Rodelli",pin:"4"}},
+  /* las cuatro producen lo mismo: persa y europeo, organico y convencional */
+  pr:[{c:"PERSA",p:"20 LBS",t:"org"},
+      {c:"PERSA",p:"20 LBS",t:"cv"},
+      {c:"EUROPEO",p:"12 CT",t:"org"},
+      {c:"EUROPEO",p:"12 CT",t:"cv"}],
+  cl:{}, au:{}, us:{}, pinMatch:"9"}}
+function saneaCfg(c){
+  c=c&&typeof c==="object"?c:{};
+  return {ag:c.ag&&typeof c.ag==="object"?c.ag:{},
+          cl:c.cl&&typeof c.cl==="object"?c.cl:{},
+          pr:Array.isArray(c.pr)?c.pr:[],
+          au:c.au&&typeof c.au==="object"?c.au:{},
+          us:c.us&&typeof c.us==="object"?c.us:{},
+          pinMatch:c.pinMatch||"9"}}
+
+/* ================= EL MOTOR DEL MATCH ================= */
+/* Para un producto y un dia: quien tiene bultos, quien los pide, y quien puede
+   surtirle a quien. Devuelve lo cubierto, lo que falta y lo que sobra.
+   El reparto atiende PRIMERO al cliente que tiene menos agricolas autorizadas
+   con bultos, porque es el que se queda sin opciones si alguien mas se le
+   adelanta. Entre agricolas, se jala de la que trae mas, para no dejar
+   sobrantes de migaja regados.                                            */
+function reparte(oferta,pedido,autoriza){
+  var ag=Object.keys(oferta).filter(function(a){return nf(oferta[a])>0});
+  var queda={}; ag.forEach(function(a){queda[a]=nf(oferta[a])});
+  var cl=Object.keys(pedido).filter(function(c){return nf(pedido[c])>0});
+
+  function puede(c,a){var m=autoriza[c];
+    /* sin matriz capturada para ese cliente, se permite todo y se avisa aparte */
+    if(!m||!Object.keys(m).length)return true;
+    return !!m[a]}
+
+  cl.sort(function(x,y){
+    var nx=ag.filter(function(a){return puede(x,a)}).length;
+    var ny=ag.filter(function(a){return puede(y,a)}).length;
+    if(nx!==ny)return nx-ny;
+    return nf(pedido[y])-nf(pedido[x])});
+
+  var dio={},falta={},tomo={};
+  cl.forEach(function(c){
+    var resta=nf(pedido[c]); dio[c]={};
+    var mios=ag.filter(function(a){return puede(c,a)&&queda[a]>0})
+      .sort(function(a,b){return queda[b]-queda[a]});
+    mios.forEach(function(a){
+      if(resta<=0)return;
+      var t=Math.min(resta,queda[a]);
+      if(t<=0)return;
+      queda[a]-=t; resta-=t; dio[c][a]=(dio[c][a]||0)+t;
+      tomo[a]=(tomo[a]||0)+t});
+    if(resta>0)falta[c]=resta});
+
+  /* lo que sobra, y si ese sobrante le serviria a alguien que se quedo corto */
+  var sobra={}; ag.forEach(function(a){if(queda[a]>0)sobra[a]=queda[a]});
+  var trabado=[];
+  Object.keys(falta).forEach(function(c){
+    Object.keys(sobra).forEach(function(a){
+      if(!puede(c,a))trabado.push({cl:c,ag:a,bultos:sobra[a]})})});
+
+  var tot=function(o){return Object.keys(o).reduce(function(s,k){return s+nf(o[k])},0)};
+  return {dio:dio,falta:falta,sobra:sobra,tomo:tomo,trabado:trabado,
+    oferta:tot(oferta),pedido:tot(pedido),
+    cubierto:tot(pedido)-tot(falta),
+    totFalta:tot(falta),totSobra:tot(sobra)};
+}
+
+/* junta una semana entera: proy[ag][pk][d] y ped[cl][pk][d] */
+function balance(cfg,proy,ped,dia){
+  var ds=(dia==="todos")?[0,1,2,3,4,5,6]:[nf(dia)];
+  var out=[];
+  (cfg.pr||[]).forEach(function(p){
+    var k=pk(p),of={},pe={};
+    Object.keys(cfg.ag||{}).forEach(function(a){
+      var s=0; ds.forEach(function(d){s+=nf(((proy[a]||{})[k]||{})[d])});
+      if(s)of[a]=s});
+    Object.keys(cfg.cl||{}).forEach(function(c){
+      var s=0; ds.forEach(function(d){s+=nf(((ped[c]||{})[k]||{})[d])});
+      if(s)pe[c]=s});
+    if(!Object.keys(of).length&&!Object.keys(pe).length)return;
+    var r=reparte(of,pe,cfg.au||{});
+    out.push({p:p,k:k,r:r,of:of,pe:pe})});
+  return out;
+}
+
+/* ================= pantallas ================= */
+function Entrar(p){
+  var [m,setM]=uS(""),[c,setC]=uS(""),[e,setE]=uS(""),[v,setV]=uS(false);
+  function va(){
+    if(MODO==="pin"){
+      var r=p.porPin(c.trim());
+      if(!r){setE("Contrasena equivocada");return}
+      p.listo(r); return}
+    if(!m.trim()||!c){setE("Falta el correo o la contrasena");return}
+    setV(true);setE("");
+    entra(m.trim(),c).then(function(){setV(false);p.listo()})
+    .catch(function(x){setV(false);
+      setE(/EMAIL_NOT_FOUND|INVALID_PASSWORD|INVALID_LOGIN/.test(x.message)
+        ? "Correo o contrasena equivocados" : x.message)})}
+  return <div className="ent">
+    <div className="card">
+      <div className="mrc">PerFresh</div>
+      <h1>Entrar</h1>
+      {MODO!=="pin"&&
+        <input id="mail" type="email" placeholder="correo" value={m}
+          autoCapitalize="off" autoCorrect="off"
+          onChange={function(ev){setM(ev.target.value)}}/>}
+      <input id="pass" type="password" placeholder="contrasena" value={c}
+        inputMode={MODO==="pin"?"numeric":"text"}
+        onChange={function(ev){setC(ev.target.value)}}
+        onKeyDown={function(ev){if(ev.key==="Enter")va()}}/>
+      <button className="pri" id="bentrar" style={{width:"100%",padding:12}}
+        disabled={v} onClick={va}>{v?"...":"ENTRAR"}</button>
+      {e&&<div className="err" id="errlog">{e}</div>}
+    </div>
+  </div>;
+}
+
+/* ---- la captura del productor: SOLO lo suyo ---- */
+function Productor(p){
+  var cfg=p.cfg, ag=p.ag, sem=p.sem;
+  var [v,setV]=uS({}), [est,setEst]=uS(""), [car,setCar]=uS(true);
+  var tmr=uR(null);
+  uE(function(){var vivo=true; setCar(true);
+    fget("pf-proy-v1/"+sem+"/"+ag).then(function(d){ if(!vivo)return;
+      setV(d&&typeof d==="object"?d:{}); setCar(false)})
+    .catch(function(x){if(vivo){setEst(String(x.message));setCar(false)}});
+    return function(){vivo=false}},[sem,ag]);
+
+  var mios=(cfg.pr||[]).filter(function(x){
+    var lista=((cfg.ag||{})[ag]||{}).pr;
+    return !lista||!lista.length||lista.indexOf(pk(x))>=0});
+
+  function pon(k,d,val){
+    var q=JSON.parse(JSON.stringify(v));
+    if(!q[k])q[k]={};
+    if(String(val).trim()==="")delete q[k][d]; else q[k][d]=nf(val);
+    setV(q); setEst("guardando...");
+    clearTimeout(tmr.current);
+    tmr.current=setTimeout(function(){
+      /* se escribe SOLO esa celda, nunca el objeto completo */
+      var ruta="pf-proy-v1/"+sem+"/"+ag+"/"+k+"/"+d;
+      var val2=(q[k]&&q[k][d]!=null)?q[k][d]:null;
+      fput(ruta,val2).then(function(){setEst("guardado")})
+      .catch(function(x){setEst(String(x.message))})},700)}
+
+  var tot=0; mios.forEach(function(x){var k=pk(x);
+    for(var d=0;d<7;d++)tot+=nf((v[k]||{})[d])});
+
+  return <div>
+    <div className="card">
+      <div className="row" style={{justifyContent:"space-between"}}>
+        <div><div className="lbl">tus bultos de la semana</div>
+          <div className="big">{miles(tot)}</div></div>
+        {est&&<span className={"pill "+(/guardado$/.test(est)?"ok":
+          (/guardando/.test(est)?"sob":"falta"))} id="estado">{est}</span>}
+      </div>
+    </div>
+    {car?<div className="card mut">Cargando...</div>:
+     !mios.length?<div className="card mut" id="sincat">
+       Todavia no hay productos en el catalogo. Avisale a la comercializadora.</div>:
+    <div className="card"><div className="tbl"><table id="tproy">
+      <thead><tr><th>Producto</th>
+        {DIAS.map(function(n,i){return <th key={i} className="n">{n}<br/>
+          <span className="mut" style={{fontWeight:400}}>{lindo(diaDe(sem,i))}</span></th>})}
+        <th className="n">Total</th></tr></thead>
+      <tbody>
+        {mios.map(function(x){var k=pk(x),s=0;
+          for(var d=0;d<7;d++)s+=nf((v[k]||{})[d]);
+          return <tr key={k} data-pr={k}>
+            <td>{x.c} {x.p} <span className={"pill "+(x.t==="cv"?"cv":"org")}>
+              {x.t==="cv"?"CV":"ORG"}</span></td>
+            {DIAS.map(function(_,d){return <td key={d} className="n">
+              <input className="n" data-d={d} value={(v[k]&&v[k][d]!=null)?v[k][d]:""}
+                placeholder="-" inputMode="numeric"
+                onChange={function(ev){pon(k,d,ev.target.value)}}/></td>})}
+            <td className="n"><b>{miles(s)}</b></td></tr>})}
+      </tbody></table></div>
+      <div className="hint">Solo bultos ya empacados. Se guarda solo, celda por celda.</div>
+    </div>}
+  </div>;
+}
+
+/* ---- pedidos de los clientes ---- */
+function Pedidos(p){
+  var cfg=p.cfg, sem=p.sem;
+  var cls=Object.keys(cfg.cl||{});
+  var [cl,setCl]=uS(cls[0]||"");
+  var [v,setV]=uS({}), [est,setEst]=uS("");
+  var tmr=uR(null);
+  uE(function(){if(!cl)return; var vivo=true;
+    fget("pf-ped-v1/"+sem+"/"+cl).then(function(d){ if(!vivo)return;
+      setV(d&&typeof d==="object"?d:{})}).catch(function(x){setEst(String(x.message))});
+    return function(){vivo=false}},[sem,cl]);
+  function pon(k,d,val){
+    var q=JSON.parse(JSON.stringify(v)); if(!q[k])q[k]={};
+    if(String(val).trim()==="")delete q[k][d]; else q[k][d]=nf(val);
+    setV(q); setEst("guardando...");
+    clearTimeout(tmr.current);
+    tmr.current=setTimeout(function(){
+      fput("pf-ped-v1/"+sem+"/"+cl+"/"+k+"/"+d,
+        (q[k]&&q[k][d]!=null)?q[k][d]:null)
+      .then(function(){setEst("guardado")})
+      .catch(function(x){setEst(String(x.message))})},700)}
+  if(!cls.length)return <div className="card mut" id="sincli">
+    Primero captura los clientes en CATALOGO.</div>;
+  return <div>
+    <div className="card"><div className="lbl">cliente</div>
+      <div className="row">
+        {cls.map(function(c){return <button key={c} data-cl={c}
+          className={cl===c?"on":""} onClick={function(){setCl(c)}}>
+          {cfg.cl[c].n}</button>})}
+        {est&&<span className={"pill "+(/guardado$/.test(est)?"ok":"sob")}>{est}</span>}
+      </div></div>
+    <div className="card"><div className="tbl"><table id="tped">
+      <thead><tr><th>Producto</th>
+        {DIAS.map(function(n,i){return <th key={i} className="n">{n}</th>})}
+        <th className="n">Total</th></tr></thead>
+      <tbody>{(cfg.pr||[]).map(function(x){var k=pk(x),s=0;
+        for(var d=0;d<7;d++)s+=nf((v[k]||{})[d]);
+        return <tr key={k} data-pr={k}>
+          <td>{x.c} {x.p} <span className={"pill "+(x.t==="cv"?"cv":"org")}>
+            {x.t==="cv"?"CV":"ORG"}</span></td>
+          {DIAS.map(function(_,d){return <td key={d} className="n">
+            <input className="n" data-d={d} value={(v[k]&&v[k][d]!=null)?v[k][d]:""}
+              placeholder="-" inputMode="numeric"
+              onChange={function(ev){pon(k,d,ev.target.value)}}/></td>})}
+          <td className="n"><b>{miles(s)}</b></td></tr>})}
+      </tbody></table></div></div>
+  </div>;
+}
+
+/* ---- el match ---- */
+function Balance(p){
+  var cfg=p.cfg, sem=p.sem;
+  var [proy,setProy]=uS({}), [ped,setPed]=uS({}), [dia,setDia]=uS("todos");
+  var [car,setCar]=uS(true), [abre,setAbre]=uS(null), [err,setErr]=uS("");
+  uE(function(){var vivo=true; setCar(true);
+    Promise.all([fget("pf-proy-v1/"+sem),fget("pf-ped-v1/"+sem)])
+    .then(function(r){ if(!vivo)return;
+      setProy(r[0]&&typeof r[0]==="object"?r[0]:{});
+      setPed(r[1]&&typeof r[1]==="object"?r[1]:{}); setCar(false)})
+    .catch(function(x){if(vivo){setErr(String(x.message));setCar(false)}});
+    return function(){vivo=false}},[sem]);
+
+  var fil=uM(function(){return balance(cfg,proy,ped,dia)},[cfg,proy,ped,dia]);
+  /* la rejilla: para cada producto, que pasa CADA DIA de la semana */
+  var sem7=uM(function(){
+    var m={},or=[];
+    for(var d=0;d<7;d++){
+      balance(cfg,proy,ped,String(d)).forEach(function(f){
+        if(!m[f.k]){m[f.k]={p:f.p,d:{}};or.push(f.k)}
+        m[f.k].d[d]={s:f.r.totSobra,f:f.r.totFalta}})}
+    return {m:m,or:or}},[cfg,proy,ped]);
+  var tS=0,tF=0; fil.forEach(function(f){tS+=f.r.totSobra;tF+=f.r.totFalta});
+  var nom=function(o,id){return ((o||{})[id]||{}).n||id};
+
+  if(err)return <div className="card"><div className="aviso r">{err}</div></div>;
+  if(car)return <div className="card mut">Cargando...</div>;
+  if(!(cfg.pr||[]).length)return <div className="card mut" id="sinprod">
+    Primero captura los productos en CATALOGO.</div>;
+
+  return <div>
+    <div className="card">
+      <div className="row dsel" style={{marginBottom:10}}>
+        <button className={dia==="todos"?"on sm":"sm"}
+          onClick={function(){setDia("todos")}}>toda la semana</button>
+        {DIAS.map(function(n,i){return <button key={i} data-dia={i}
+          className={dia===String(i)?"on sm":"sm"}
+          onClick={function(){setDia(String(i))}}>{n} {lindo(diaDe(sem,i))}</button>})}
+      </div>
+      <div className="gd">
+        <div className="kv sb"><b id="totsob">{miles(tS)}</b>
+          <small>EXCEDENTE</small></div>
+        <div className="kv fl"><b id="totfal">{miles(tF)}</b>
+          <small>FALTANTE</small></div>
+        <div className="kv"><b>{fil.length}</b><small>PRODUCTOS CON MOVIMIENTO</small></div>
+      </div>
+    </div>
+
+    {!!sem7.or.length&&<div className="card">
+      <div className="lbl">dia por dia</div>
+      <div className="tbl"><table id="tsem" className="sem">
+        <thead><tr><th>Producto</th>
+          {DIAS.map(function(n,i){return <th key={i} className="n">{n}<br/>
+            <span className="mut" style={{fontWeight:400}}>{lindo(diaDe(sem,i))}</span>
+          </th>})}</tr></thead>
+        <tbody>{sem7.or.map(function(k){var r=sem7.m[k];
+          return <tr key={k} data-pr={k}>
+            <td>{r.p.c} {r.p.p} <span className={"pill "+(r.p.t==="cv"?"cv":"org")}>
+              {r.p.t==="cv"?"CV":"ORG"}</span></td>
+            {DIAS.map(function(_,d){var x=r.d[d];
+              if(!x)return <td key={d} className="c vacio">·</td>;
+              if(x.f>0)return <td key={d} className="c">
+                <span className="f" data-f={d}>-{miles(x.f)}</span></td>;
+              if(x.s>0)return <td key={d} className="c">
+                <span className="s" data-s={d}>+{miles(x.s)}</span></td>;
+              return <td key={d} className="c"><span className="c0">ok</span></td>})}
+          </tr>})}</tbody></table></div>
+      <div className="hint">+ es lo que sobra y se puede vender · − es lo que falta</div>
+    </div>}
+
+    <div className="card">
+      <div className="lbl">{dia==="todos"?"toda la semana":"el dia "+lindo(diaDe(sem,nf(dia)))}</div>
+      <div className="tbl"><table id="tbal">
+      <thead><tr><th>Producto</th><th className="n">Proyectado</th>
+        <th className="n">Pedido</th><th className="n">Diferencia</th>
+        <th>Estado</th><th></th></tr></thead>
+      <tbody>{fil.map(function(f){
+        var dif=f.r.oferta-f.r.pedido;
+        return <tr key={f.k} data-pr={f.k}>
+          <td>{f.p.c} {f.p.p} <span className={"pill "+(f.p.t==="cv"?"cv":"org")}>
+            {f.p.t==="cv"?"CV":"ORG"}</span></td>
+          <td className="n">{miles(f.r.oferta)}</td>
+          <td className="n">{miles(f.r.pedido)}</td>
+          <td className="n" style={{color:dif<0?"var(--ro1)":(dif>0?"var(--am1)":"inherit")}}>
+            {dif>0?"+":""}{miles(dif)}</td>
+          <td>{f.r.totFalta>0
+              ? <span className="pill falta">faltan {miles(f.r.totFalta)}</span>
+              : f.r.totSobra>0
+              ? <span className="pill sob">sobran {miles(f.r.totSobra)}</span>
+              : <span className="pill ok">cuadra</span>}</td>
+          <td><button className="sm gh" data-ver={f.k}
+            onClick={function(){setAbre(abre===f.k?null:f.k)}}>
+            {abre===f.k?"cerrar":"ver"}</button></td>
+        </tr>})}
+      </tbody></table></div></div>
+
+    {abre&&(function(){
+      var f=fil.filter(function(x){return x.k===abre})[0];
+      if(!f)return null;
+      return <div className="card" id="detalle">
+        <div className="lbl">{nomPr(f.p)}</div>
+        <div className="tbl"><table>
+          <thead><tr><th>Agricola</th><th className="n">Trae</th>
+            <th className="n">Se usa</th><th className="n">Le sobra</th></tr></thead>
+          <tbody>{Object.keys(f.of).map(function(a){return <tr key={a} data-ag={a}>
+            <td>{nom(cfg.ag,a)}</td><td className="n">{miles(f.of[a])}</td>
+            <td className="n">{miles(f.r.tomo[a]||0)}</td>
+            <td className="n" style={{color:f.r.sobra[a]?"var(--am1)":"inherit"}}>
+              {miles(f.r.sobra[a]||0)}</td></tr>})}</tbody></table></div>
+
+        <div className="tbl" style={{marginTop:11}}><table>
+          <thead><tr><th>Cliente</th><th className="n">Pide</th>
+            <th className="n">Cubierto</th><th className="n">Falta</th>
+            <th>De quien sale</th></tr></thead>
+          <tbody>{Object.keys(f.pe).map(function(c){
+            var dado=Object.keys(f.r.dio[c]||{}).map(function(a){
+              return nom(cfg.ag,a)+" "+miles(f.r.dio[c][a])}).join(" · ");
+            var cub=nf(f.pe[c])-nf(f.r.falta[c]||0);
+            return <tr key={c} data-cl={c}>
+              <td>{nom(cfg.cl,c)}</td><td className="n">{miles(f.pe[c])}</td>
+              <td className="n">{miles(cub)}</td>
+              <td className="n" style={{color:f.r.falta[c]?"var(--ro1)":"inherit"}}>
+                {miles(f.r.falta[c]||0)}</td>
+              <td className="mut">{dado||"—"}</td></tr>})}</tbody></table></div>
+
+        {f.r.totSobra>0&&<div className="aviso a" id="avsobra">
+          <b>Para venta:</b> sobran {miles(f.r.totSobra)} bultos —{" "}
+          {Object.keys(f.r.sobra).map(function(a){
+            return nom(cfg.ag,a)+" "+miles(f.r.sobra[a])}).join(" · ")}</div>}
+
+        {f.r.totFalta>0&&(f.r.trabado.length
+          ? <div className="aviso r" id="avtrabado">
+              <b>Falta y SI hay, pero no esta autorizada:</b><br/>
+              {f.r.trabado.map(function(t,i){return <div key={i}>
+                {nom(cfg.cl,t.cl)} se queda corto y {nom(cfg.ag,t.ag)} trae{" "}
+                {miles(t.bultos)} de sobra, pero no le surte a ese cliente.</div>})}
+            </div>
+          : <div className="aviso r" id="avfalta">
+              <b>Faltan {miles(f.r.totFalta)} bultos</b> y ninguna de las cuatro
+              tiene sobrante de este producto. Hay que conseguirlo afuera o
+              recortarle a alguien.</div>)}
+      </div>})()}
+  </div>;
+}
+
+/* ---- catalogo: aqui captura Miguel lo que falta ---- */
+function Catalogo(p){
+  var cfg=p.cfg, graba=p.graba;
+  var [est,setEst]=uS("");
+  function cambia(fn){var q=JSON.parse(JSON.stringify(cfg)); fn(q);
+    setEst("guardando..."); graba(q).then(function(){setEst("guardado")})
+    .catch(function(x){setEst(String(x.message))})}
+  var [nag,setNag]=uS(""),[ncl,setNcl]=uS("");
+  var [pc,setPc]=uS(""),[pp,setPp]=uS(""),[pt,setPt]=uS("org");
+  var ids=function(n){return sinAc(n).replace(/[^a-z0-9]/g,"").slice(0,18)||("x"+Date.now())};
+
+  return <div>
+    {est&&<div className="card"><span className={"pill "+(/guardado$/.test(est)?"ok":"sob")}>
+      {est}</span></div>}
+
+    <div className="card"><div className="lbl">agricolas que venden a PerFresh</div>
+      <div className="tbl"><table id="tag"><tbody>
+        {Object.keys(cfg.ag||{}).map(function(a){return <tr key={a} data-ag={a}>
+          <td>{cfg.ag[a].n}</td>
+          <td className="mut" style={{fontSize:11}}>{a}</td>
+          {MODO==="pin"
+            ? <td style={{width:90}}><input data-pin={a} placeholder="PIN"
+                style={{width:70}} value={cfg.ag[a].pin||""}
+                onChange={function(e){var val=e.target.value;
+                  cambia(function(q){q.ag[a].pin=val})}}/></td>
+            : <td style={{width:120}}><input placeholder="UID de su cuenta"
+                style={{width:"100%",fontSize:11}} value={cfg.ag[a].uid||""}
+                onChange={function(e){var val=e.target.value;
+                  cambia(function(q){q.ag[a].uid=val})}}/></td>}
+          <td style={{width:70}}><button className="sm gh" data-del={a}
+            onClick={function(){cambia(function(q){delete q.ag[a]})}}>quitar</button></td>
+        </tr>})}
+      </tbody></table></div>
+      <div className="row" style={{marginTop:9}}>
+        <input placeholder="nombre de la agricola" value={nag} id="nag"
+          onChange={function(e){setNag(e.target.value)}}/>
+        <button className="pri sm" id="bag" onClick={function(){
+          if(!nag.trim())return; var id=ids(nag);
+          cambia(function(q){q.ag[id]={n:nag.trim()}}); setNag("")}}>agregar</button>
+      </div>
+      {MODO==="pin"
+        ? <div className="row" style={{marginTop:9}}>
+            <span className="mut" style={{fontSize:12}}>Tu PIN</span>
+            <input data-pin="match" style={{width:70}} value={cfg.pinMatch||""}
+              onChange={function(e){var val=e.target.value;
+                cambia(function(q){q.pinMatch=val})}}/>
+          </div>
+        : <div className="hint">El UID sale de la consola de Firebase, en
+            Authentication. Es lo que amarra la cuenta con su agricola.</div>}
+    </div>
+
+    <div className="card"><div className="lbl">clientes que hacen pedidos</div>
+      <div className="row">
+        {Object.keys(cfg.cl||{}).map(function(c){return <span key={c} className="pill ok"
+          data-cl={c} style={{padding:"5px 11px"}}>{cfg.cl[c].n}{" "}
+          <a href="#" data-del={c} style={{color:"inherit"}} onClick={function(ev){
+            ev.preventDefault(); cambia(function(q){delete q.cl[c];
+              delete q.au[c]})}}>×</a></span>})}
+      </div>
+      <div className="row" style={{marginTop:9}}>
+        <input placeholder="nombre del cliente" value={ncl} id="ncl"
+          onChange={function(e){setNcl(e.target.value)}}/>
+        <button className="pri sm" id="bcl" onClick={function(){
+          if(!ncl.trim())return; var id=ids(ncl);
+          cambia(function(q){q.cl[id]={n:ncl.trim()}}); setNcl("")}}>agregar</button>
+      </div>
+    </div>
+
+    <div className="card"><div className="lbl">productos que se proyectan</div>
+      <div className="tbl"><table id="tpr"><tbody>
+        {(cfg.pr||[]).map(function(x,i){return <tr key={i} data-pr={pk(x)}>
+          <td>{x.c}</td><td>{x.p}</td>
+          <td><span className={"pill "+(x.t==="cv"?"cv":"org")}>
+            {x.t==="cv"?"CV":"ORG"}</span></td>
+          <td style={{width:70}}><button className="sm gh" onClick={function(){
+            cambia(function(q){q.pr.splice(i,1)})}}>quitar</button></td></tr>})}
+      </tbody></table></div>
+      <div className="row" style={{marginTop:9}}>
+        <input placeholder="cultivo" value={pc} id="pc" style={{width:130}}
+          onChange={function(e){setPc(e.target.value)}}/>
+        <input placeholder="presentacion" value={pp} id="pp" style={{width:150}}
+          onChange={function(e){setPp(e.target.value)}}/>
+        <select value={pt} id="pt" onChange={function(e){setPt(e.target.value)}}>
+          <option value="org">organico</option><option value="cv">convencional</option>
+        </select>
+        <button className="pri sm" id="bpr" onClick={function(){
+          if(!pc.trim()||!pp.trim())return;
+          cambia(function(q){q.pr.push({c:pc.trim().toUpperCase(),
+            p:pp.trim().toUpperCase(),t:pt})});
+          setPc("");setPp("")}}>agregar</button>
+      </div>
+      <div className="hint">Ejemplo: EUROPEO / 12 CT / organico. El tipo va aparte
+        para que el match no revuelva organico con convencional.</div>
+    </div>
+
+    <div className="card"><div className="lbl">quien le surte a quien</div>
+      {!Object.keys(cfg.cl||{}).length
+        ? <div className="mut">Captura clientes primero.</div>
+        : <div className="tbl"><table id="tau">
+          <thead><tr><th>Cliente</th>
+            {Object.keys(cfg.ag||{}).map(function(a){return <th key={a}>
+              {cfg.ag[a].n}</th>})}</tr></thead>
+          <tbody>{Object.keys(cfg.cl).map(function(c){return <tr key={c} data-cl={c}>
+            <td>{cfg.cl[c].n}</td>
+            {Object.keys(cfg.ag||{}).map(function(a){
+              var on=!!((cfg.au||{})[c]||{})[a];
+              return <td key={a}><button className={on?"on sm":"sm gh"}
+                data-au={c+"/"+a} onClick={function(){cambia(function(q){
+                  if(!q.au[c])q.au[c]={};
+                  if(q.au[c][a])delete q.au[c][a]; else q.au[c][a]=true})}}>
+                {on?"si":"no"}</button></td>})}
+          </tr>})}</tbody></table></div>}
+      <div className="hint">Si a un cliente no le marcas ninguna, se entiende que
+        cualquiera le puede surtir.</div>
+    </div>
+  </div>;
+}
+
+/* ================= app ================= */
+function App(){
+  var [list,setList]=uS(false);
+  var [yo,setYo]=uS(null);          /* {rol, ag} */
+  var [cfg,setCfg]=uS(null);
+  var [sem,setSem]=uS(viernes(iso(new Date())));
+  var [tab,setTab]=uS("");
+  var [err,setErr]=uS("");
+
+  function pone(C,R){
+    setCfg(C); setYo(R); setTab(R.rol==="prod"?"proy":"bal"); setList(true)}
+
+  /* en modo PIN quien seas lo decide el numero, contra lo que diga el catalogo */
+  function porPin(n){
+    if(!cfg||!n)return null;
+    var a=Object.keys(cfg.ag||{}).filter(function(k){
+      return String(cfg.ag[k].pin||"")===String(n)})[0];
+    if(a)return {rol:"prod",ag:a};
+    if(String(cfg.pinMatch||"")===String(n))return {rol:"admin",ag:""};
+    return null}
+
+  function arranca(){
+    setErr("");
+    fget("pf-cfg-v1").then(function(c){
+      var C=c?saneaCfg(c):cfgVacia();
+      cargaOk.current=true;      /* ya sabemos que hay del otro lado */
+      if(MODO==="pin"){setCfg(C);setList(true);return}
+      /* quien soy: por UID contra las agricolas, o por la lista de usuarios */
+      var mia=Object.keys(C.ag||{}).filter(function(a){
+        return C.ag[a].uid&&C.ag[a].uid===SES.uid})[0];
+      var u=(C.us||{})[SES.uid];
+      pone(C,{rol:mia?"prod":((u&&u.rol)||"match"),ag:mia||(u&&u.ag)||""});
+    }).catch(function(x){setErr(String(x.message));setList(true)})}
+
+  uE(function(){
+    if(MODO==="pin"){arranca();return}
+    var rt=null; try{rt=localStorage.getItem("pf-ref")}catch(e){}
+    if(!rt){setList(true);return}
+    refresca(rt).then(arranca).catch(function(){sale();setList(true)})},[]);
+
+  /* EL CANDADO DEL CATALOGO: esta es la UNICA escritura de toda la app que manda
+     un objeto completo, y asi fue como se borro el historial de gastos en
+     octubre (una lectura que fallo, y despues un guardado que escribio encima).
+     Aqui no se guarda nada si la lectura inicial no respondio.             */
+  var cargaOk=uR(false);
+  function graba(q){
+    if(!cargaOk.current)
+      return Promise.reject(new Error(
+        "No se guardo: no se alcanzo a leer el catalogo. Recarga la pagina."));
+    setCfg(q); return fput("pf-cfg-v1",q)}
+
+  if(!list)return <div className="wrap"><div className="card mut">Abriendo...</div></div>;
+  var dentro=(MODO==="pin")?!!yo:!!SES.tok;
+  if(!dentro)return <Entrar porPin={porPin}
+    listo={function(R){ if(R)pone(cfg||cfgVacia(),R); else arranca() }}/>;
+
+  var esProd=yo&&yo.rol==="prod";
+  var esAdmin=yo&&yo.rol==="admin";
+  var nomAg=esProd?((cfg&&cfg.ag[yo.ag]||{}).n||yo.ag):"";
+
+  return <div>
+    <div className="bar"><div className="in">
+      <div className="row" style={{justifyContent:"space-between"}}>
+        <div><div className="mrc">PerFresh</div>
+          <h1 id="titulo">{esProd?nomAg:"Comercializadora"}</h1></div>
+        <button className="sm gh" id="bsalir"
+          onClick={function(){sale();
+            if(MODO==="pin"){setYo(null);setTab("")} else location.reload()}}>
+          salir</button>
+      </div>
+      <div className="row" style={{marginBottom:8}}>
+        <button className="sm gh" onClick={function(){setSem(masDias(sem,-7))}}>&laquo;</button>
+        <b id="sem">{lindo(sem)} al {lindo(masDias(sem,6))}</b>
+        <button className="sm gh" onClick={function(){setSem(masDias(sem,7))}}>&raquo;</button>
+        <button className="sm gh" onClick={function(){
+          setSem(viernes(iso(new Date())))}}>esta semana</button>
+      </div>
+      {!esProd&&<div className="tabs">
+        <button className={tab==="bal"?"on":""} onClick={function(){setTab("bal")}}>
+          BALANCE</button>
+        <button className={tab==="ped"?"on":""} onClick={function(){setTab("ped")}}>
+          PEDIDOS</button>
+        <button className={tab==="prv"?"on":""} onClick={function(){setTab("prv")}}>
+          PROYECCIONES</button>
+        <button className={tab==="cat"?"on":""} onClick={function(){setTab("cat")}}>
+          CATALOGO</button>
+      </div>}
+    </div></div>
+
+    <div className="wrap">
+      {err&&<div className="card"><div className="aviso r" id="errgen">{err}</div></div>}
+      {!cfg?null:
+       esProd? <Productor cfg={cfg} ag={yo.ag} sem={sem}/> :
+       tab==="ped"? <Pedidos cfg={cfg} sem={sem}/> :
+       tab==="cat"? <Catalogo cfg={cfg} graba={graba}/> :
+       tab==="prv"? <VerProy cfg={cfg} sem={sem}/> :
+       <Balance cfg={cfg} sem={sem}/>}
+    </div>
+  </div>;
+}
+
+/* ---- la comercializadora viendo lo que proyectaron los cuatro ---- */
+function VerProy(p){
+  var cfg=p.cfg,sem=p.sem;
+  var [proy,setProy]=uS({}),[car,setCar]=uS(true);
+  uE(function(){var vivo=true;setCar(true);
+    fget("pf-proy-v1/"+sem).then(function(d){if(!vivo)return;
+      setProy(d&&typeof d==="object"?d:{});setCar(false)})
+    .catch(function(){if(vivo)setCar(false)});
+    return function(){vivo=false}},[sem]);
+  if(car)return <div className="card mut">Cargando...</div>;
+  var ags=Object.keys(cfg.ag||{});
+  return <div className="card"><div className="tbl"><table id="tprv">
+    <thead><tr><th>Producto</th>
+      {ags.map(function(a){return <th key={a} className="n">{cfg.ag[a].n}</th>})}
+      <th className="n">Total</th></tr></thead>
+    <tbody>{(cfg.pr||[]).map(function(x){var k=pk(x),t=0;
+      var cel=ags.map(function(a){var s=0;
+        for(var d=0;d<7;d++)s+=nf((((proy[a]||{})[k])||{})[d]); t+=s; return s});
+      if(!t)return null;
+      return <tr key={k} data-pr={k}>
+        <td>{x.c} {x.p} <span className={"pill "+(x.t==="cv"?"cv":"org")}>
+          {x.t==="cv"?"CV":"ORG"}</span></td>
+        {cel.map(function(s,i){return <td key={i} className="n">{s?miles(s):"—"}</td>})}
+        <td className="n"><b>{miles(t)}</b></td></tr>})}
+    </tbody></table></div></div>;
+}
+
+window.__pf={reparte:reparte,balance:balance,pk:pk,dePk:dePk,viernes:viernes,
+  esc:esc,des:des,SES:SES,MODO:MODO,cfgVacia:cfgVacia};
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body></html>
